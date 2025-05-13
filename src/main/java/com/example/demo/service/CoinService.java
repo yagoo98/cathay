@@ -63,7 +63,7 @@ public class CoinService {
         Map<String, Object> coinInfo = new HashMap<>();
         for (Map.Entry<String, Map<String, Object>> entry : bpi.entrySet()) {
             String coinCode = entry.getKey();
-            Double rate = (Double) entry.getValue().get("rate");
+            Object rate = entry.getValue().get("rate");
             String chineseName;
             switch (coinCode) {
                 case "USD":
@@ -106,9 +106,10 @@ public class CoinService {
         return coinRepository.findByName(coin.getName()).orElseGet(() -> coinRepository.save(coin));
     }
 
-    public Coin updateCoin(String name, BigDecimal rate) {
+    public Coin updateCoin(String name, String nameZH, BigDecimal rate) {
         return coinRepository.findByName(name)
                 .map(coin -> {
+                    coin.setNameZH(nameZH);
                     coin.setRate(rate);
                     return coinRepository.save(coin);
                 })
