@@ -54,7 +54,7 @@ public class CoinController {
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public Map<String, Object> update(@RequestBody Coin updatedCoin) {
-        Coin savedCoin = coinService.updateCoin(updatedCoin.getName(), updatedCoin.getRate());
+        Coin savedCoin = coinService.updateCoin(updatedCoin.getName(), updatedCoin.getNameZH(), updatedCoin.getRate());
         return coinService.getResultMap(savedCoin);
     }
 
