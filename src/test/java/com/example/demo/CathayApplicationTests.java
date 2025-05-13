@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,5 +83,49 @@ class CathayApplicationTests {
         coinService.deleteCoin("GBP");
         Optional<Coin> deletedGbpCoin = coinService.searchCoin("GBP");
         assertFalse(deletedGbpCoin.isPresent());
+    }
+
+    @Test
+    void testTransformData() {
+        Map<String, Object> data = new HashMap<>();
+
+        Map<String, String> time = new HashMap<>();
+        time.put("updatedISO", "2024-09-02T07:07:20+00:00");
+        data.put("time", time);
+
+        Map<String, Map<String, Object>> bpi = new HashMap<>();
+
+        Map<String, Object> usd = new HashMap<>();
+        usd.put("rate", 57756.298);
+        bpi.put("USD", usd);
+
+        Map<String, Object> gbp = new HashMap<>();
+        gbp.put("rate", 43984.02);
+        bpi.put("GBP", gbp);
+
+        Map<String, Object> eur = new HashMap<>();
+        eur.put("rate", 52243.287);
+        bpi.put("EUR", eur);
+
+        data.put("bpi", bpi);
+
+        Map<String, Object> result = coinService.transformData(data);
+
+        assertEquals("2024/09/02 07:07:20", result.get("更新時間"));
+
+        Map<String, Object> coinInfo = (Map<String, Object>) result.get("幣別相關資訊");
+        assertNotNull(coinInfo);
+
+        Map<String, Object> usdInfo = (Map<String, Object>) coinInfo.get("USD");
+        assertEquals("美元", usdInfo.get("幣別中文名稱"));
+        assertEquals(57756.298, usdInfo.get("匯率"));
+
+        Map<String, Object> gbpInfo = (Map<String, Object>) coinInfo.get("GBP");
+        assertEquals("英鎊", gbpInfo.get("幣別中文名稱"));
+        assertEquals(43984.02, gbpInfo.get("匯率"));
+
+        Map<String, Object> eurInfo = (Map<String, Object>) coinInfo.get("EUR");
+        assertEquals("歐元", eurInfo.get("幣別中文名稱"));
+        assertEquals(52243.287, eurInfo.get("匯率"));
     }
 }

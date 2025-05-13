@@ -63,7 +63,7 @@ public class CoinService {
         Map<String, Object> coinInfo = new HashMap<>();
         for (Map.Entry<String, Map<String, Object>> entry : bpi.entrySet()) {
             String coinCode = entry.getKey();
-            String rate = (String) entry.getValue().get("rate");
+            Double rate = (Double) entry.getValue().get("rate");
             String chineseName;
             switch (coinCode) {
                 case "USD":
