@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.example.demo.controller.CoinController;
 import com.example.demo.entity.Coin;
 import com.example.demo.service.CoinService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class CathayApplicationTests {
     @Autowired
     CoinService coinService;
+    @Autowired
+    CoinController coinController;
     Coin usdCoin;
     Coin gbpCoin;
     Coin eurCoin;
@@ -30,9 +33,9 @@ class CathayApplicationTests {
 
     @BeforeEach
     void setUp() {
-        usdCoin = new Coin("USD", "USD", new BigDecimal("101935.90"), LocalDateTime.now(), null);
-        gbpCoin = new Coin("GBP", "GBP", new BigDecimal("77479.62"), LocalDateTime.now(), null);
-        eurCoin = new Coin("EUR", "EUR", new BigDecimal("92115.92"), LocalDateTime.now(), null);
+        usdCoin = new Coin("USD", "美元", new BigDecimal("101935.9000"), LocalDateTime.now(), null);
+        gbpCoin = new Coin("GBP", "英鎊", new BigDecimal("77479.6200"), LocalDateTime.now(), null);
+        eurCoin = new Coin("EUR", "歐元", new BigDecimal("92115.9200"), LocalDateTime.now(), null);
 
         Optional<Coin> oldUsdCoin = coinService.searchCoin(usdCoin.getName());
         Optional<Coin> oldGbpCoin = coinService.searchCoin(gbpCoin.getName());
@@ -71,7 +74,7 @@ class CathayApplicationTests {
     @Test
     void testUpdateCoin() {
         BigDecimal newRate = new BigDecimal("105000.0000");
-        coinService.updateCoin(usdCoin.getName(), newRate);
+        coinService.updateCoin(usdCoin.getName(), "美金", newRate);
 
         Optional<Coin> updatedUsdCoin = coinService.searchCoin(usdCoin.getName());
         assertTrue(updatedUsdCoin.isPresent());
@@ -127,5 +130,88 @@ class CathayApplicationTests {
         Map<String, Object> eurInfo = (Map<String, Object>) coinInfo.get("EUR");
         assertEquals("歐元", eurInfo.get("幣別中文名稱"));
         assertEquals(52243.287, eurInfo.get("匯率"));
+    }
+
+    @Test
+    void testSearch() {
+        Coin dummyCoin = new Coin("USD", null, null, null, null);
+        Map<String, Object> response = coinController.search(dummyCoin);
+        assertEquals("success", response.get("status"));
+
+        Map<String, Object> responseData = (Map<String, Object>) response.get("data");
+        assertEquals(responseData.get("幣別"), usdCoin.getName());
+        assertEquals(responseData.get("幣別中文名稱"), usdCoin.getNameZH());
+
+        BigDecimal searchRateValue = (BigDecimal) responseData.get("匯率");
+        int comparisonResult = searchRateValue.compareTo(usdCoin.getRate());
+        assertEquals(0, comparisonResult);
+
+        System.out.println("查詢回傳資料: " + responseData);
+    }
+
+    @Test
+    void testCreate() {
+        Coin dummyCoin = new Coin("TWD", "新台幣", new BigDecimal("3092012.51"), null, null);
+        Map<String, Object> response = coinController.create(dummyCoin);
+        assertEquals("success", response.get("status"));
+
+        Map<String, Object> responseData = (Map<String, Object>) response.get("data");
+        assertEquals(responseData.get("幣別"), dummyCoin.getName());
+        assertEquals(responseData.get("幣別中文名稱"), dummyCoin.getNameZH());
+
+        BigDecimal searchRateValue = (BigDecimal) responseData.get("匯率");
+        int comparisonResult = searchRateValue.compareTo(dummyCoin.getRate());
+        assertEquals(0, comparisonResult);
+
+        System.out.println("新增回傳資料: " + responseData);
+    }
+
+    @Test
+    void testUpdate() {
+        Coin dummyCoin = new Coin("USD", "美元", new BigDecimal("123.4567"), null, null);
+        Map<String, Object> response = coinController.update(dummyCoin);
+        assertEquals("success", response.get("status"));
+
+        Map<String, Object> responseData = (Map<String, Object>) response.get("data");
+        assertEquals(responseData.get("幣別"), dummyCoin.getName());
+        assertEquals(responseData.get("幣別中文名稱"), dummyCoin.getNameZH());
+
+        BigDecimal searchRateValue = (BigDecimal) responseData.get("匯率");
+        int comparisonResult = searchRateValue.compareTo(usdCoin.getRate());
+        assertNotEquals(0, comparisonResult);
+        assertEquals(new BigDecimal("123.4567"), searchRateValue);
+
+        System.out.println("修改回傳資料: " + responseData);
+    }
+
+    @Test
+    void testDelete() {
+        Coin dummyCoin = new Coin("USD", null, null, null, null);
+        Map<String, Object> response = coinController.delete(dummyCoin);
+        assertEquals("success", response.get("status"));
+
+        Map<String, Object> responseData = (Map<String, Object>) response.get("data");
+        assertEquals(responseData.get("幣別"), usdCoin.getName());
+
+        Map<String, Object> searchResponse = coinController.search(dummyCoin);
+        assertNotEquals("success", searchResponse.get("status"));
+
+        System.out.println("刪除回傳資料: " + responseData);
+    }
+
+    @Test
+    void testGetCoinDesk() {
+        Map<String, Object> response = coinController.getCoinDesk();
+        assertNotNull(response);
+
+        System.out.println("呼叫coindesk API回傳資料: " + response);
+    }
+
+    @Test
+    void testGetTransformCoinDesk() {
+        Map<String, Object> response = coinController.getTransformCoinDesk();
+        assertNotNull(response);
+
+        System.out.println("呼叫資料轉換的API回傳資料: " + response);
     }
 }
